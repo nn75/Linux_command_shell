@@ -1,0 +1,4 @@
+myShell: /home/nn75/ece551/mp_miniproject $ 1
+Program exited with status 0
+myShell: /home/nn75/ece551/mp_miniproject $ Program exited with status 1
+myShell: /home/nn75/ece551/mp_miniproject $ 

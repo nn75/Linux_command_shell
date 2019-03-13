@@ -1,0 +1,4 @@
+Grade: 105.4
+Comments:
+Memory Errors when runing non executable command; didn't set ECE551PATH. Incorrect > implementation. It should overwrite the file if the file exists
+

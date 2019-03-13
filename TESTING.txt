@@ -1,0 +1,968 @@
+ECE551: mp_miniproject
+NetId: nn75
+Date: 12/3/2018
+
+Note before testing: there are test files in the directory "testcase".
+
+-------------------------------------------------------------------------------------------------
+Step1 Read a command name and run it
+Step2 Improving commands
+-------------------------------------------------------------------------------------------------
+(1) run "\n" or "      \n"
+    you will see:
+
+        myShell: /home/nn75/ece551/mp_miniproject $
+
+    Because no input command, so myShell prints a new prompt line to get command.
+    Spaces input before enter are ignored.
+
+(2) run "./myShell" or "valgrind ./myShell"
+    you will see:
+
+        myShell: /home/nn75/ece551/mp_miniproject $
+
+    Because "myShell" is my program, "/home/nn75/ece551/mp_miniproject" is the current directory,
+    so we are running myShell now.
+
+(3) run "myShell"
+    you will see:
+
+        Command myShell not found
+
+    Because myShell is not found executable in PATH.
+
+(4) run"."
+    you will see:
+
+        Command . not found
+
+    Because "." is directory and my program does not execute directory.
+
+(5) run "/bin/ls"
+    you will see:
+
+        (a list of files and directories in the current directory)
+        Program exited with status 0
+
+    Because this is how ls works and the program exited after running /bin/ls successfully.
+
+(6) run "ls"
+    you will see:
+
+        (a list of files and directories in the current directory)
+        Program exited with status 0
+
+    Because ls is found in PATH and runs successfully.
+
+(7) run"../bin/ls"
+    you will see:
+
+        Command ../bin/ls not found
+
+    Because "../bin/ls" has "." after ".", so my program does not found it.
+
+(8) run "./commandShell.txt"
+    you will see:
+    
+        Execve: Permission denied
+        Program exited with status 1
+
+    Because commandShell.txt does not have permission to be executed, so it exited with status 1.
+
+(9) run "./testcase/mySegmentfault"
+    you will see:
+    
+        Program was killed by signal 11
+
+    Because mySegmentfault (which is in the testcase file) has segment fault, so program was killed by 11.
+
+(10)run "echo a b 23"
+    you will see:
+
+        a b 23
+        Program exited with status 0
+
+    Because echo takes arguments separated by space.
+
+(11)run " echo     a       b      23"
+    you will see:
+
+        a b 23
+        Program exited with status 0
+
+    Because echo takes arguments separated by space but ignore the arbitrary amount of space in between.
+
+(12)run "echo     a\ \ \ \ \ \ \ b\      23"
+    you will see:
+
+        a       b  23
+        Program exited with status 0
+
+    The output has two arguments, one is "a       b " and the other is "23".
+    Because space can escape by slash, compare to the (11), there are spaces escape by slash and "a       b " is one argument.
+    Because the slash behind "b" help escape one space, there is one space behind "a       b ".
+    Because there are arbitrary spaces between b and 23, "23" becomes the next argument.
+
+(13)run "echo \"
+    you will see:
+
+
+        Program exited with status 0
+
+    Because "\" is regraded as a sign before ESC, so it is useless there and is removed.
+
+(14)run "echo \\"
+    you will see:
+
+        \
+        Program exited with status 0
+
+    Because the second slash is reserved by the first slash.
+    Any character behind slash will be reserved.
+
+(15)run "echo     b\"
+    you will see:
+
+        b
+        Program exited with status 0
+
+    Because slash without character behind is useless and is removed.
+
+(16)run "echo     \b"
+    you will see:
+
+        b
+        Program exited with status 0
+
+    Because "b" is reserved by the first slash. Any character behind slash will be reserved.
+
+-------------------------------------------------------------------------------------------------
+Step3.1  Change directories (cd)
+-------------------------------------------------------------------------------------------------
+(1) run "cd"
+    you will see:
+    
+        Cd syntax error! Format: cd directory
+    
+    Because cd command needs exactly one argument.
+
+(2) run "cd .. ."
+    you will see:
+    
+        Cd syntax error! Format: cd directory
+    
+    Because cd command needs exactly one argument.
+
+(3) run "cd /bin"
+    you will see:
+    
+        myShell: /bin
+    
+    Because cd command change the current directory to /bin.
+
+(4) run "cd /home/nn75/ece551/mp_miniproject"
+    you will see:
+    
+        myShell: /home/nn75/ece551/mp_miniproject $
+    
+    Because cd command change the current back to /home/nn75/ece551/mp_miniproject.
+
+(5) run "cd .."
+    you will see:
+    
+        myShell: /home/nn75/ece551 $
+    
+    Because "cd .." means go back to the parent directory
+
+(6) run "cd ."
+    you will see:
+    
+        myShell: /home/nn75/ece551 $
+    
+    Because "cd ." means stay at the current directory.
+
+(7) run "cd 106_not_exist"
+    you will see:
+    
+        cd: No such file or directory
+    
+    Because "106_not_exist" is not exist under /home/nn75/ece551
+    
+(8) run "cd mp_miniproject"
+    you will see:
+    
+        myShell: /home/nn75/ece551/mp_miniproject $
+    
+    Because "mp_miniproject" is a file under /home/nn75/ece551 and cd command runs successfully.
+
+(9) run "cd README"
+    you will see:
+    
+        cd: Not a directory
+
+    Because "README" is a file but not a directory.
+
+(10) run "cd /root"
+    you will see:
+    
+        cd: Permission denied
+    
+    Because "/root" can not be accessed without permission.
+
+-------------------------------------------------------------------------------------------------
+Step3.2  Variables (set)
+-------------------------------------------------------------------------------------------------
+Note: Valid var of set can only contains letter, number and underscore.
+(1) run:
+
+        set var1 a
+        set var2 b
+        echo $var1$var2
+
+    you will see:
+    
+        ab
+        Program exited with status 0
+    
+    Because "var1" is set to "a" and "var2" is set to "b", so "$var1$var2" expands to "ab".
+
+(2) run: 
+
+        set x
+        echo $x
+
+    you will see:
+    
+        
+        Program exited with status 0
+    
+    Because "x" is a valid environment variable name but no value is given to it, so the value of "x" is set to "".
+
+(3) run: 
+
+        set
+
+    you will see:
+    
+        Set Syntax error! Format: set var value
+    
+    Because no environment variable name or value is given in the command, so it is a syntax error.   
+
+(4) run: 
+
+        set b.d l
+
+    you will see:
+    
+        Invalid variable name! Only letters, numbers and underscore
+    
+    Because "b.d" is not a valid variable name. Valid var name contains only letters, numbers and underscore.
+
+(5) run:
+
+        set var1 a
+        echo $var1
+        set var1 b
+        echo $var1
+
+    you will see:
+    
+        a
+        Program exited with status 0
+        b
+        Program exited with status 0
+    
+    Because the value of var1 was updated.
+
+(6) run:
+
+        set var1 a
+        set $var1 $var1$var1
+        echo $$var1
+
+    you will see:
+    
+        aa
+        Program exited with status 0
+    
+    Because the first command set var1 = a, the second line expands to "set a aa", which means a = aa,
+    then the third command expands to "echo $a", so the output is "aa".
+
+(7) run:
+
+        set x a      b\ \ \ \ \ c       \n  (with space behind c)
+        echo $x..
+    
+    you will see:
+    
+        a b     c..
+        Program exited with status 0
+
+    Because "$x" expands to its value and extra spaces is ingnored unless behind slash.
+
+(8) run:
+
+        set x echo a
+        $x  b\ \ \ \ \ c
+    
+    you will see:
+    
+        a b     c
+        Program exited with status 0
+
+    Because "x" is set to "echo a" in the first command.
+    In the second command, "$x" expands to "echo a" first, so the command becomes "echo a b\ \ \ \ \ c".
+
+
+(9) run:
+        set a b
+        set b c
+        set c d
+        echo a $a $$a $$$a
+    
+    you will see:
+    
+        a b c d
+        Program exited with status 0
+    
+    Because in my program "$val" will expands recursively until "$val" not found or there's no "$".
+    "$$$a" first expands to "$$b", because first command set a = b, so last "$a" expands to "b";
+    "$$b" then expands to "$c", because second command set b = c, so last "$b" expands to "c";
+    "$c" finally expands to "$d", because third command set c = d, so "$c" expands to "d";
+    In conclusion, "$$$a" expands to "d". "$$a" can expand to "c" in the same way.
+
+(10) run:
+
+        echo $t
+
+    you will see:
+    
+        t not found
+
+        Program exited with status 0
+   
+    Because "t" is not in the variable table, so it is set to "".
+    Then "echo "" " prints out a empty sting.
+
+(11) run: 
+
+        set a t
+        echo $$a
+
+    you will see:
+    
+        t not found
+
+        Program exited with status 0
+   
+    Because "$$a" expands to "t", "t" is not in the variable table, so it is set to "".
+    Then "echo "" " prints out a empty sting.
+
+(12) run:
+
+        set a c_1.b
+        set c_1 d
+        echo $$a
+
+    you will see:
+    
+        d.b
+        Program exited with status 0
+        
+    First command set a = c_1.b, second command set c_1 = d, third command "$$a" expands to "$c_1.b" first,
+    Because underscore "_" is legal in var name but "." is not legal, "$c_1.b" expands to "d.b" and printed.
+
+(13) run:
+
+        set a .b
+        echo $$a
+
+    you will see:
+    
+        $.b
+        Program exited with status 0
+   
+    Because first command set a = .b, second command expands "$$a" to "$.b" first,
+    When expands "$.b", no valid var behind "$", so "$.b" is printed.
+
+(14) run:
+
+        set a b
+        echo $a$$
+
+    you will see:
+    
+        b$$
+        Program exited with status 0
+   
+    First command set a = b. Because no valid var is behind the last two "$$" of "$a$$",
+    they are reserved, so "$a$$" expands to "b$$" and is printed.
+
+(15) run:
+
+        echo $
+
+    you will see:
+    
+        $
+        Program exited with status 0
+    
+    Because no valid var is behind "$", "$" is reserved and printed.
+
+(16) run:
+
+        echo $$$$$
+
+    you will see:
+    
+        $$$$$
+        Program exited with status 0
+    
+    Because no valid var is behind every "$", every "$" is reserved and printed.
+
+(17) run:
+
+        echo \$
+
+    you will see:
+    
+        $
+        Program exited with status 0
+    
+    Because any character behind slash will be reserved.
+
+(18) run:
+
+        set a $
+        echo $a
+
+    you will see:
+    
+        $
+        Program exited with status 0
+    
+    First command set a = $. Because "$a" expands to "$", no valid var is behind "$",
+    so "$" is reserved and printed.
+
+-------------------------------------------------------------------------------------------------
+Step3.3  Variables (export)
+-------------------------------------------------------------------------------------------------
+Note: Valid var of export can only contains letter, number and underscore.
+(1) run:
+
+        set var3 a
+        env
+
+    you will see:
+    
+        (All environment variable are listed without var3)
+        Program exited with status 0
+    
+    Because set only set var3 in its variable table, var3 is not exported to environment,
+    so there is no var3 in the environment variable list.
+
+(2) run:
+
+        set var3 a
+        export var3
+        env
+
+    you will see:
+    
+        (All environment variable are listed with var3=a)
+        Program exited with status 0
+    
+    Because var3 is exported to environment by export successfully,
+    so it can be seen in the environment variable list.
+
+(3) run:
+
+        set var3 a
+        export var3
+        set var3 b
+        env
+
+    you will see:
+    
+        (All environment variable are listed with var3=a)
+        Program exited with status 0
+    
+    Because set cannot change the var's value when var is in the environment.
+
+(4) run:
+
+        export
+
+    you will see:
+    
+        Export Syntax error! Format: export var
+    
+    Because export command needs exactly one argument.
+
+(5) run:
+
+        export a b
+
+    you will see:
+    
+        Export Syntax error! Format: export var
+    
+    Because export command needs exactly one argument.
+
+(6) run:
+
+        export a..
+
+    you will see:
+    
+        Export: invalid variable! Only letter, numbers and underscore
+    
+    Because "." is not legal in a var name. Valid var name contains only letters, numbers and underscore.
+
+(7) run:
+
+        export faker
+
+    you will see:
+    
+        faker is not found in variable table!
+    
+    Because faker is not set to the variable table, we cannot export var which is not in the table.
+
+-------------------------------------------------------------------------------------------------
+Step3.4  Variables (inc)
+-------------------------------------------------------------------------------------------------
+Note: Valid var of inc can only contains letter, number and underscore.
+(1) run:
+
+        set a b
+        inc a
+        echo $a
+
+    you will see:
+    
+        1
+        Program exited with status 0
+    
+    The first command set a = b. Because "b" is not a base10 number,
+    so inc set a's variable to "0" and increments it to "1".
+
+(2) run:
+
+        set a 10
+        inc a
+        echo $a
+
+    you will see:
+    
+        11
+        Program exited with status 0
+    
+    The first command set a = 10. Because "10" is a base10 number, so inc command increments it to "11". 
+
+(3) run:
+
+        inc faker2
+        echo $faker2
+
+    you will see:
+    
+        1
+        Program exited with status 0
+    
+    Because "faker2" was not in the current variable table, it was added to the table first,
+    and then was increased to "1".
+
+(4) run:
+
+        inc 
+
+    you will see:
+    
+        Inc syntax error! Format: inc var
+    
+    Because inc command needs exactly one argument.
+
+(5) run:
+
+        inc a b
+
+    you will see:
+    
+        Inc syntax error! Format: inc var
+    
+    Because inc command needs exactly one argument.
+
+(6) run:
+
+        inc .a
+
+    you will see:
+    
+        Inc: invalid variable! Only letter, numbers and underscore
+    
+    Because "." is not legal in a var name. Valid var name contains only letters, numbers and underscore.
+
+(7) run:
+
+        set var4 a
+        export var4
+        inc var4
+        env
+        echo $var4
+
+    you will see:
+    
+        (All environment variable are listed with var4=a)
+        Program exited with status 0
+        1
+        Program exited with status 0
+    
+    Because inc cannot change the var's value when var is in the environment.
+
+-------------------------------------------------------------------------------------------------
+Step4 Pipes and redirection
+-------------------------------------------------------------------------------------------------
+Note1: "<", ">", "2>" and "|" need front and back white spaces.
+Note2: Output file will be created if there is no such output file.
+
+(1) run:
+
+        cat < testcase/input1.txt
+
+    you will see (in the shell):
+    
+        0
+        Program exited with status 0
+    
+    Because stdin is redirected, so echo reads content from input1.txt and writes to stdout.
+    (content in inpu1.txt is 0)
+
+(2) run:
+
+        echo 1 > testcase/output1.txt
+
+    you will see (in the shell):
+
+        Program exited with status 0
+    
+    you will see (in file testcase/output1.txt):
+    
+        1
+    
+    Because stdout is redirected, so the output of echo is written to output1.txt.
+
+(3) run:
+
+        cat faker 2> testcase/err1.txt
+    
+    you will see (in the shell):
+
+        Program exited with status 1
+    
+    you will see (in file testcase/err1.txt):
+    
+        bin/cat: faker: No such file or directory
+    
+    Because "faker" is not exist, so "cat faker" will report error and exited with status 1.
+    And because stderr is redirected, so the error is written to err1.txt.
+
+(4) run:
+
+        cat < 
+        (or cat >
+         or cat 2>
+         or cat < >
+         or cat 2> < <
+         etc.)
+
+    you will see:
+    
+        Redirection syntex error! Format: < ( or > or 2> ) filename
+    
+    Because "<", ">" and "2>" should have filename behind (with space between) to work correctly. If there's "<", ">" and "2>" 
+    before or behind them, there will be syntex error.
+
+(5) run:
+
+        cat << testcase/input1.txt
+
+    you will see:
+    
+        /bin/cat: '<<': No such file or directory
+        0
+        Program exited with status 1
+    
+    Because "<", ">" and "2>" can only be recognized correctly with front space and back space.
+    So "<<" is treated as a not exist file or directory. And the content of input1.txt is printed
+    to shell.
+
+(6)run:
+
+        cat < testcase
+
+    you will see:
+
+        Input file: Is a directory
+        Program exited with status 1
+    
+    Because testcase is a directory not a file.
+
+(7) run:
+
+        cat < faker
+
+    you will see:
+    
+        Input file: No such file or directory
+        Program exited with status 1
+        
+    Because "faker" is not exist, stdin cannot be redirected to a file not exist, so report error.
+
+(8) run:
+
+        ./myShell < testcase/input2.txt > testcase/output2.txt 2> testcase/err2.txt
+    
+    you will see (in the shell):
+
+        Program exited with status 0
+
+    you will see (in file testcase/output2.txt):
+    
+        myShell: /home/nn75/ece551/mp_miniproject $ 1
+        Program exited with status 0
+        myShell: /home/nn75/ece551/mp_miniproject $ Program exited with status 1
+        myShell: /home/nn75/ece551/mp_miniproject $ 
+
+    you will see (in file testcase/err2.txt):
+
+        /bin/cat: faker: No such file or directory
+    
+    Because stdin, stdout and stderr are all redirected, and the content of input2.txt is:
+
+        echo 1
+        cat faker
+    
+    The output of "echo 1" is 1 and program exited with status 0, the "faker" is not exist and so
+    "cat faker" exited with status 1. These are all written to output2.txt. And the error is written
+    to err2.txt
+
+(9) run:
+
+        cat < testcase/input1.txt < testcase/input3.txt > testcase/output1.txt > testcase/output3.txt
+    
+    you will see (in the shell):
+
+        Program exited with status 0
+    
+    you will see (in file testcase/output3.txt):
+    
+        3
+    
+    The content of input1.txt is "1", the content of input3.txt is "3", the content of output1.txt is "1".
+    After running command, the content of output1.txt is still "1" and the content of output3.txt is still "3". 
+    Because if there are multiple input and output files, redirection only cares about the last input file and
+    the last output file, so stdin is redirected to input3.txt and stdout is redirected to output3.txt. 
+
+(10) run:
+
+        ls | cat
+
+    you will see:
+    
+        Program exited with status 0
+        (All files under current directory listed)
+        Program exited with status 0
+    
+    Because ls lists all files and then they are piped into the cat, so all files are printed by cat.
+
+(11) run:
+
+        ls | cat | cat | cat | cat
+
+    you will see:
+    
+        Program exited with status 0
+        Program exited with status 0
+        Program exited with status 0
+        (All files under current directory listed)
+        Program exited with status 0
+        Program exited with status 0
+
+    Because ls lists all files and then they are piped into the next cat.
+    The list of all files are printed by the last cat (they are not seen in pipes between).
+
+(12) run:
+
+        ls | > output4.txt
+        (or ls < | cat
+         or ls 2> | cat
+         or ls < | > cat
+         etc.)
+
+    you will see:
+
+        Pipe syntex error! Format: command | command
+    
+    Because "|" cannot work correctly with "<", ">" and "2>" before or behind, so report syntax error.
+
+(13) run:
+
+        ls | | cat
+
+    you will see:
+
+        Pipe syntex error! Format: command | command
+    
+    Because "|" cannot work correctly with "|" before or behind, so report syntax error.
+
+(14) run:
+
+        ls | cat |
+
+    you will see:
+
+        Pipe syntex error! Format: command | command
+    
+    Because "|" 
+
+(15) run:
+
+        ls || cat
+
+
+    you will see:
+
+        /bin/ls: cannot access '||': No such file or directory
+        /bin/ls: cannot access 'cat': No such file or directory
+        Program exited with status 2
+
+    
+    Because "|" is treated as sign of pipe with front space and back space, so "||" is treated as a argument of ls.
+
+(16) run:
+
+        ls | cat > testcase/output4.txt | cat
+
+    you will see:
+
+        Program exited with status 0
+        (All files under current directory listed)
+        Program exited with status 0
+        Program exited with status 0
+        (No output4.txt is created in the testcase directory)
+    
+    Because the output of middle processes will be passed into pipe, so it would be redirected to the file.
+
+(17) run:
+
+        cat < testcase/input2.txt | ./myShell 2> testcase/err3.txt | cat
+
+    you will see (in the shell):
+
+        Program exited with status 0
+        myShell: /home/nn75/ece551/mp_miniproject $ 1
+        Program exited with status 0
+        myShell: /home/nn75/ece551/mp_miniproject $ Program exited with status 1
+        myShell: /home/nn75/ece551/mp_miniproject $
+        Program exited with status 0
+        Program exited with status 0
+    
+    you will see (in the testcase/err3.txt):
+
+        /bin/cat: faker: No such file or directory
+
+    Because the error output of middle processes can be redirected to the error ouputfile.
+
+(18) run:
+
+        ./myShell | cd ..
+
+    you will see (in the shell):
+
+        Command cd not found
+    
+    Because "|" should have process at front and back, cd is not a process and it cannot be found in the PATH.
+
+(19) run:
+
+        dd if=/dev/zero of=bigfile.txt bs=10M count=1 
+        cat < bigfile.txt | cat | cat > bigfile_copy.txt
+        ls -l
+
+    you will see:
+        
+        (After run first command, a bigfile.txt is built)
+        1+0 records in
+        1+0 records out
+        10485760 bytes (10 MB, 10 MiB) copied, 0.0617913 s, 170 MB/s
+
+        (After run second command, a bigfile_copy.txt is built)
+        Program exited with status 0
+        Program exited with status 0
+        Program exited with status 0
+
+        (After run third command)
+        -rw-r--r-- 1 nn75 nn75 10485760 Dec  3 19:48 bigfile_copy.txt  (The copy file of bigfile.txt with the same size)
+        -rw-rw-r-- 1 nn75 nn75 10485760 Dec  3 19:46 bigfile.txt       (The bigfile in size 10M, which is bigger than 65536 bytes)
+        -rw-r--r-- 1 nn75 nn75     7055 Dec  2 22:57 commandShell.txt
+        -rw-r--r-- 1 nn75 nn75    37784 Dec  1 20:55 main
+        -rw-r--r-- 1 nn75 nn75     1203 Dec  3 19:41 main.cpp
+        -rw-r--r-- 1 nn75 nn75      284 Dec  2 18:03 Makefile
+        -rw-rw-r-- 1 nn75 nn75      977 Dec  3 19:41 myCd.cpp
+        -rw-r--r-- 1 nn75 nn75      652 Dec  3 19:41 myCd.h
+        -rw-rw-r-- 1 nn75 nn75      236 Dec  3 19:41 myCommand.cpp
+        -rw-r--r-- 1 nn75 nn75      595 Dec  3 19:40 myCommand.h
+        -rw-rw-r-- 1 nn75 nn75     1839 Dec  3 19:40 myExport.cpp
+        -rw-r--r-- 1 nn75 nn75      721 Dec  3 19:40 myExport.h
+        -rw-rw-r-- 1 nn75 nn75     2096 Dec  3 19:40 myInc.cpp
+        -rw-r--r-- 1 nn75 nn75      927 Dec  3 19:40 myInc.h
+        -rw-rw-r-- 1 nn75 nn75     7166 Dec  3 19:39 myParse.cpp
+        -rw-r--r-- 1 nn75 nn75     1159 Dec  3 19:39 myParse.h
+        -rw-rw-r-- 1 nn75 nn75     2973 Dec  3 19:39 mySet.cpp
+        -rw-r--r-- 1 nn75 nn75      910 Dec  3 19:38 mySet.h
+        -rwxrwxr-x 1 nn75 nn75   740800 Dec  3 19:42 myShell
+        -rw-rw-r-- 1 nn75 nn75    10593 Dec  3 19:38 myShell.cpp
+        -rw-r--r-- 1 nn75 nn75     2004 Dec  3 19:38 myShell.h
+        -rw-r--r-- 1 nn75 nn75     8881 Dec  1 20:55 numerics.txt
+        -rw-r--r-- 1 nn75 nn75     2475 Dec  1 20:55 README
+        -rw-rw-r-- 1 nn75 nn75      800 Dec  3 19:37 runCommand.cpp
+        -rw-r--r-- 1 nn75 nn75      665 Dec  3 19:37 runCommand.h
+        drwxrwxr-x 2 nn75 nn75      165 Dec  3 00:07 testcase
+        -rw-rw-r-- 1 nn75 nn75    16474 Dec  3 19:47 TESTING.txt
+
+    Because I build a bigfile.txt in 10M, and then use cat to pass its content into pipe,
+    and finally output it to bigfile_copy.txt. It shows my implemenation work correctly when 
+    sending large amounts of data through the pipe
+
+(20) run:
+
+        set x cat
+        $x < README | cat | $x | cat
+
+    you will see:
+
+        Program exited with status 0
+        Program exited with status 0
+        (Content of README)
+        Program exited with status 0
+        Program exited with status 0
+    
+    Because "$x" is replaced by cat, so the second command works the same as
+    "cat < README | cat | cat | cat".
+
+(21) run:
+
+        cat < bigfile.txt | true
+
+    you will see:
+    
+        Program was killed by signal 13
+        Program exited with status 0
+    
+    Because before cat finish reading bigfile.txt, true is already exited.
+    So the pipe is no longer valid and cat is killed by signal 13. 
+
+(22) run "exit" or hit C^D
+    you will see program exit with valgrind cleaned.
+
